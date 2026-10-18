@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
 			} else {
 				grade_class = "Poor";
 			}
-			printf("Grade   : %s\n", grade_class);
+			printf(" Grade   : %s\n", grade_class);
 			printf("====================================\n\n");
 
 			fclose(file);

@@ -40,11 +40,13 @@ int main() {
         "./students.txt",
         NULL
       };
-      
+      // Special case: execve chi tra ve khi no that bai.
+			// Neu thanh cong, no se thay the hoan toan tien trinh hien tai.
+			// Vi vay, block code nay chi chay khi execve gap loi.
       execve("./searcher", args, environ);
       
       perror("Khong mo duoc file");
-      exit(2);
+      exit(2); // Bat buoc phai co exit de child process khong chay lot xuong logic cua parent
     }
     else if (pid < 0) {
 		perror("fork failed");

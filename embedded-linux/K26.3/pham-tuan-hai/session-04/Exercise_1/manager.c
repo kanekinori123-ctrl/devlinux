@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <locale.h>
 #define NUM_ORDERS 3
 
 typedef struct {
@@ -27,6 +28,7 @@ void process_order(Order o) {
 }
 
 int main() {
+	setlocale(LC_NUMERIC, "");
 	pid_t pids[NUM_ORDERS];
 	int status;
 	float total_revenue = 0;
@@ -37,9 +39,12 @@ int main() {
 	
 	printf("[MANAGER] PID: %d — spawning %d child processes...\n\n", getpid(), NUM_ORDERS);
 	
+	printf("--- [child output order may interleave — this is normal] ---\n\n");
+	
 	//Create sub processes to do process_order
 	for(int i = 0; i < NUM_ORDERS; i++) {
 		fflush(stdout);
+		fflush(stderr);
 		
 		pid_t pid = fork();
 		
@@ -56,6 +61,7 @@ int main() {
 	}
 	
 	printf("[MANAGER] All %d children spawned. Starting waitpid()...\n\n", NUM_ORDERS);
+	printf("--- [~2 seconds later, all 3 children call exit(0)] ---\n\n");
 	
 	//Check sub process value and calculate total revenue
 	int success_count = 0;
@@ -80,7 +86,7 @@ int main() {
 	printf("================= SUMMARY =================\n");
 	printf("Total order: %d\n", NUM_ORDERS);
 	printf("Success: %d\n", success_count);
-	printf("Total revenue: %g\n", total_revenue);
+	printf("Total revenue: %'.0f\n", total_revenue);
 	printf("===========================================\n");
 	
 	return 0;
