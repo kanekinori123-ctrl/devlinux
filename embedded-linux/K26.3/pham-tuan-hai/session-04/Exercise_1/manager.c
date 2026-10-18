@@ -21,13 +21,13 @@ Order orders[NUM_ORDERS] = {
 // Dummy handler: De bat SIGCHLD nhung khong tranh chap viec reap voi waitpid()
 void sigchld_handler(int sig) {
 	// Lưu lại errno cũ để không làm hỏng logic của hàm main đang chạy dở
-  int saved_errno = errno; 
+	int saved_errno = errno; 
   
   // WNOHANG: Dọn xác ngay lập tức. Nếu không có xác nào thì return luôn (không block)
   // -1: Dọn xác của bất kỳ đứa con nào (không quan tâm PID)
-  while (waitpid(-1, NULL, WNOHANG) > 0); 
+	while (waitpid(-1, NULL, WNOHANG) > 0); 
   
-  errno = saved_errno;
+	errno = saved_errno;
 }
 
 void process_order(Order o) {
@@ -45,7 +45,12 @@ int main() {
 	setlocale(LC_NUMERIC, "");
 	
 	//Bat tin hieu SIGCHLD
-	signal(SIGCHLD, sigchld_handler);
+	struct sigaction sa;
+	sa.sa_handler = sigchld_handler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART | SA_NOCLDSTOP; // SA_RESTART giup tu dong khoi phuc fgets
+	sigaction(SIGCHLD, &sa, NULL);
+	
 	pid_t pids[NUM_ORDERS];
 	int status;
 	float total_revenue = 0;
@@ -60,6 +65,7 @@ int main() {
 	
 	//Create sub processes to do process_order
 	for(int i = 0; i < NUM_ORDERS; i++) {
+	/* fflush before fork to prevent duplicate buffered output */
 		fflush(stdout);
 		fflush(stderr);
 		
@@ -68,11 +74,17 @@ int main() {
 		if(pid == 0) {
 			process_order(orders[i]);
 			exit(0);
-		} else if (pid > 0){
+		} 
+    else if (pid > 0){
 			pids[i] = pid;
 			printf("[MANAGER] fork() order #%d → child PID: %d\n", i + 1, pid);
-		} else if (pid < 0) {
+		} 
+    else if (pid < 0) {
 			perror("fork failed");
+			// Cleanup: Chờ các tiến trình con đã sinh ra trước đó
+	    for (int j = 0; j < i; j++) {
+	        waitpid(pids[j], NULL, 0); 
+	    }
 			exit(1);
 		}
 	}

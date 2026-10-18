@@ -1,4 +1,4 @@
-CFLAGS: -Wall -Wextra -std=gnu99 -g
+CFLAGS = -Wall -Wextra -std=gnu99 -g
 all: manager
 
 manager: manager.c
