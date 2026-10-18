@@ -5,9 +5,7 @@
 #include <string.h>
 extern char **environ;
 
-int main() {
-  system("clear");
-  
+int main() {  
   while(1){  
   
     printf("=============================================\n");
@@ -48,7 +46,10 @@ int main() {
       perror("Khong mo duoc file");
       exit(2);
     }
-    
+    else if (pid < 0) {
+		perror("fork failed");
+		exit(1);
+	}
     //Tien trinh cha
     else if (pid > 0) {
       //TODO
@@ -75,6 +76,5 @@ int main() {
     printf("----------------------------------\n\n");
     printf("An nut bat ky de tiep tuc\n");
     getchar();
-    system("clear");
   }
 }
