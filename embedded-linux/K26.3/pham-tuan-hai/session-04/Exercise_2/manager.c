@@ -18,7 +18,19 @@ int main() {
     
     //Nhap ID can tim
     char student_id[20];
-    fgets(student_id, sizeof(student_id), stdin);
+    // Xu ly retry neu stdin bi gian doan (EINTR)
+		while(1) {
+			if (fgets(student_id, sizeof(student_id), stdin) != NULL) {
+				break;
+			}
+			if (errno == EINTR) {
+				clearerr(stdin); // Xoa co loi va lap lai
+				continue;
+			}
+			// Neu gap EOF (Ctrl+D) hoac loi that su thi thoat an toan
+			printf("\n[MANAGER] Exiting. Goodbye!\n");
+			return 0;
+		}
     student_id[strcspn(student_id, "\n")] = 0;
     
     //Neu nhap "quit"
@@ -76,7 +88,5 @@ int main() {
       }
     }
     printf("----------------------------------\n\n");
-    printf("An nut bat ky de tiep tuc\n");
-    getchar();
   }
 }

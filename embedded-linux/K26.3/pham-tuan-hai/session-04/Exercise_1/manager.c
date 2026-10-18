@@ -18,17 +18,34 @@ Order orders[NUM_ORDERS] = {
 	{3, "Hat",      3, 120000}
 };
 
+// Dummy handler: De bat SIGCHLD nhung khong tranh chap viec reap voi waitpid()
+void sigchld_handler(int sig) {
+	// Lưu lại errno cũ để không làm hỏng logic của hàm main đang chạy dở
+  int saved_errno = errno; 
+  
+  // WNOHANG: Dọn xác ngay lập tức. Nếu không có xác nào thì return luôn (không block)
+  // -1: Dọn xác của bất kỳ đứa con nào (không quan tâm PID)
+  while (waitpid(-1, NULL, WNOHANG) > 0); 
+  
+  errno = saved_errno;
+}
+
 void process_order(Order o) {
 	float total = o.quantity * o.unit_price;
 	printf("[CHILD-%d] PID: %d | PPID: %d\n", o.id, getpid(), getppid());
 	printf("[CHILD-%d] %s x%d — Total: %.0f VND\n",
 	       o.id, o.name, o.quantity, total);
 	printf("[CHILD-%d] Processing... (sleep 2s)\n\n", o.id);
-	sleep(2);
+	// Xu ly EINTR cho sleep: tiep tuc ngu neu bi danh thuc giua chung
+	unsigned int sl = 2;
+	while((sl = sleep(sl)) > 0);
 }
 
 int main() {
 	setlocale(LC_NUMERIC, "");
+	
+	//Bat tin hieu SIGCHLD
+	signal(SIGCHLD, sigchld_handler);
 	pid_t pids[NUM_ORDERS];
 	int status;
 	float total_revenue = 0;

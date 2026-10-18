@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall
+CFLAGS: -Wall -Wextra -std=gnu99 -g
 
 all: manager searcher
 
