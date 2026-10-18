@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <errno.h>
 #include <locale.h>
 #define NUM_ORDERS 3
 
@@ -75,16 +76,16 @@ int main() {
 			process_order(orders[i]);
 			exit(0);
 		} 
-    else if (pid > 0){
+		else if (pid > 0){
 			pids[i] = pid;
 			printf("[MANAGER] fork() order #%d → child PID: %d\n", i + 1, pid);
 		} 
-    else if (pid < 0) {
+		else if (pid < 0) {
 			perror("fork failed");
 			// Cleanup: Chờ các tiến trình con đã sinh ra trước đó
-	    for (int j = 0; j < i; j++) {
-	        waitpid(pids[j], NULL, 0); 
-	    }
+			for (int j = 0; j < i; j++) {
+				waitpid(pids[j], NULL, 0); 
+			}
 			exit(1);
 		}
 	}
