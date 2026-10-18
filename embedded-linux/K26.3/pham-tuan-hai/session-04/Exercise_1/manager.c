@@ -21,14 +21,10 @@ Order orders[NUM_ORDERS] = {
 
 // Dummy handler: De bat SIGCHLD nhung khong tranh chap viec reap voi waitpid()
 void sigchld_handler(int sig) {
-	// Lưu lại errno cũ để không làm hỏng logic của hàm main đang chạy dở
-	int saved_errno = errno; 
-  
-  // WNOHANG: Dọn xác ngay lập tức. Nếu không có xác nào thì return luôn (không block)
-  // -1: Dọn xác của bất kỳ đứa con nào (không quan tâm PID)
-	while (waitpid(-1, NULL, WNOHANG) > 0); 
-  
-	errno = saved_errno;
+	// Su dung tham so 'sig' de compiler khong phan nan -Wunused-parameter
+	if (sig == SIGCHLD) {
+		// Khong goi waitpid o day, de danh nhiem vu cho vong lap trong main() tinh doanh thu
+	}
 }
 
 void process_order(Order o) {
@@ -38,8 +34,11 @@ void process_order(Order o) {
 	       o.id, o.name, o.quantity, total);
 	printf("[CHILD-%d] Processing... (sleep 2s)\n\n", o.id);
 	// Xu ly EINTR cho sleep: tiep tuc ngu neu bi danh thuc giua chung
-	unsigned int sl = 2;
-	while((sl = sleep(sl)) > 0);
+	struct timespec req = {2, 0}; // 2 giay, 0 nanogiay
+	struct timespec rem;
+	while (nanosleep(&req, &rem) == -1 && errno == EINTR) {
+		req = rem; // Cap nhat lai thoi gian can ngu bu neu bi ngat
+	}
 }
 
 int main() {
@@ -49,8 +48,11 @@ int main() {
 	struct sigaction sa;
 	sa.sa_handler = sigchld_handler;
 	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = SA_RESTART | SA_NOCLDSTOP; // SA_RESTART giup tu dong khoi phuc fgets
-	sigaction(SIGCHLD, &sa, NULL);
+	sa.sa_flags = SA_RESTART | SA_NOCLDSTOP;
+	if (sigaction(SIGCHLD, &sa, NULL) == -1) {
+		perror("sigaction failed");
+		exit(1);
+	}
 	
 	pid_t pids[NUM_ORDERS];
 	int status;
