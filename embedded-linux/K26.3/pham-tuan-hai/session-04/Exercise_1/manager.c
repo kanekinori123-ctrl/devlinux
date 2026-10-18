@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <time.h>
 #include <errno.h>
 #include <locale.h>
 #define NUM_ORDERS 3
@@ -65,8 +64,6 @@ int main() {
 	
 	printf("[MANAGER] PID: %d — spawning %d child processes...\n\n", getpid(), NUM_ORDERS);
 	
-	printf("--- [child output order may interleave — this is normal] ---\n\n");
-	
 	//Create sub processes to do process_order
 	for(int i = 0; i < NUM_ORDERS; i++) {
 	/* fflush before fork to prevent duplicate buffered output */
@@ -94,13 +91,17 @@ int main() {
 	}
 	
 	printf("[MANAGER] All %d children spawned. Starting waitpid()...\n\n", NUM_ORDERS);
-	printf("--- [~2 seconds later, all 3 children call exit(0)] ---\n\n");
+	printf("--- [child output order may interleave — this is normal] ---\n\n");
 	
 	//Check sub process value and calculate total revenue
 	int success_count = 0;
 	
 	for(int i = 0; i < NUM_ORDERS; i++) {
 		waitpid(pids[i], &status, 0);
+		
+		if(i == 0) {
+  		printf("--- [~2 seconds later, all 3 children call exit(0)] ---\n\n");
+    }
 		
 		if(WIFEXITED(status)){
 			int exit_code = WEXITSTATUS(status);
@@ -113,13 +114,18 @@ int main() {
 				total_revenue += orders[i].quantity * orders[i].unit_price;
 			}
 		}
+		else if (WIFSIGNALED(status)) {
+			int sig = WTERMSIG(status);
+			printf("[MANAGER] Child (PID %d) was killed by signal %d\n", pid, sig);
+		}
 	}
 	
 	//Print summary table
-	printf("================= SUMMARY =================\n");
-	printf("Total order: %d\n", NUM_ORDERS);
-	printf("Success: %d\n", success_count);
-	printf("Total revenue: %'.0f\n", total_revenue);
+	printf("\n================= SUMMARY =================\n");
+	printf("  Total orders    : %d\n", NUM_ORDERS);
+	printf("  Successful      : %d\n", success_count);
+	printf("  Failed          : %d\n", NUM_ORDERS - success_count);
+	printf("  Total revenue   : %'.0f VND\n", total_revenue);
 	printf("===========================================\n");
 	
 	return 0;
