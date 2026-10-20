@@ -53,7 +53,11 @@ void* produce(void* arg) {
 		
 		pthread_cond_signal(&not_empty);
 		
-		pthread_mutex_unlock(&q_lock);
+	if (pthread_mutex_unlock(&q_lock) != 0) {
+	    perror("Critical Error: Failed to unlock mutex");
+	    // Xử lý lỗi: thoát luồng hoặc thoát chương trình để tránh kẹt hệ thống
+	    pthread_exit(NULL); 
+	}
 		
 		usleep(100000);
   }
@@ -71,7 +75,11 @@ void* print(void *arg) {
     }
 		
 		if (count == 0 && all_sent) {
-    	pthread_mutex_unlock(&q_lock);
+    	if (pthread_mutex_unlock(&q_lock) != 0) {
+			    perror("Critical Error: Failed to unlock mutex");
+			    // Xử lý lỗi: thoát luồng hoặc thoát chương trình để tránh kẹt hệ thống
+			    pthread_exit(NULL); 
+			}
       break;
     }
 		
@@ -86,7 +94,11 @@ void* print(void *arg) {
 		
 		pthread_cond_signal(&not_full);
 		
-		pthread_mutex_unlock(&q_lock);
+	if (pthread_mutex_unlock(&q_lock) != 0) {
+	    perror("Critical Error: Failed to unlock mutex");
+	    // Xử lý lỗi: thoát luồng hoặc thoát chương trình để tránh kẹt hệ thống
+	    pthread_exit(NULL); 
+	}
 		sleep(1);
   }
 	

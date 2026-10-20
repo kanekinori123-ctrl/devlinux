@@ -24,12 +24,6 @@ int seats_sold = 0;
 void*book_ticket(void *arg) {
 	BookingRequest* req = (BookingRequest*)arg;
 
-	if (req == NULL) {
-	    pthread_exit(NULL);
-	}
-	sleep(1);
-	
-
 	pthread_mutex_lock(&seat_lock);
 	printf("[Agent %d | TID %lu...] Booking %d seats for %s...\n", req->agent_id, (unsigned long)pthread_self(), req->seats_wanted, req->customer);
 	

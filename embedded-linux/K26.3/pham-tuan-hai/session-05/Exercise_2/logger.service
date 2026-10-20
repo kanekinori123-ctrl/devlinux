@@ -1,8 +1,0 @@
-[Unit]
-Description=Logger Crash Test Service
-
-[Service]
-ExecStart=/home/h/devlinux/embedded-linux/K26.3/pham-tuan-hai/session-05/Exercise_2/logger
-
-[Install]
-WantedBy=multi-user.target
