@@ -28,12 +28,11 @@ void*book_ticket(void *arg) {
 	    pthread_exit(NULL);
 	}
 	sleep(1);
-
-	
-	printf("[Agent %d | TID %lu...] Booking %d seats for %s...\n", req->agent_id, (unsigned long)pthread_self(), req->seats_wanted, req->customer);
 	
 
 	pthread_mutex_lock(&seat_lock);
+	printf("[Agent %d | TID %lu...] Booking %d seats for %s...\n", req->agent_id, (unsigned long)pthread_self(), req->seats_wanted, req->customer);
+	
 	if (seats_available >= req->seats_wanted) {
 		seats_available -= req->seats_wanted;
 		printf("[Agent %d] CONFIRMED: %d seats for %s. Remaining: %d\n", req->agent_id, req->seats_wanted, req->customer, seats_available);
@@ -88,3 +87,17 @@ int main() {
   printf("=========================================\n");
 	return 0;
 }
+
+
+/*
+ * GIẢI THÍCH: TẠI SAO CHECK VÀ DEDUCT PHẢI NẰM TRONG CÙNG 1 BLOCK LOCK?
+ * - Hành động "kiểm tra số lượng (Check)" và "trừ đi (Deduct)" phải là 
+ *   một khối hành động nguyên tử (atomic).
+ * - Nếu chúng ta tách rời chúng ra (ví dụ: Lock -> Check -> Unlock, rồi lại 
+ *   Lock -> Deduct -> Unlock), CPU có thể chuyển luồng (context switch) 
+ *   ngay tại khe hở giữa 2 lần khóa.
+ * - Hậu quả: Cả 2 luồng cùng nhìn thấy còn đúng 1 ghế trống. Sau đó, cả 2 
+ *   cùng tiến hành trừ ghế. Dẫn đến tình trạng bán vượt quá số lượng 
+ *   (overbooking) và biến số lượng bị âm. Việc gom chung vào 1 block Lock
+ *   sẽ ngăn chặn triệt để tình trạng Race Condition này.
+ */

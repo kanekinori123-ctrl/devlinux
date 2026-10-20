@@ -40,7 +40,7 @@ void* produce(void* arg) {
 		
 		pthread_mutex_lock(&q_lock);
 		
-		while(count == 5 && !all_sent) {
+		while(count == 5) {
 			printf("[Producer %d] Queue full — waiting...\n", my_id);
     	pthread_cond_wait(&not_full, &q_lock);
     }
@@ -164,3 +164,17 @@ int main() {
 	
 	return 0;
 }
+
+/*
+ * GIẢI THÍCH: SPURIOUS WAKEUP VÀ TẠI SAO DÙNG 'WHILE' THAY VÌ 'IF'
+ * 1. Spurious wakeup (Đánh thức giả) là hiện tượng một luồng đang ngủ (wait) 
+ *    bị hệ điều hành đánh thức đột ngột dù không có bất kỳ lệnh signal() hay 
+ *    broadcast() nào được phát ra.
+ * 2. Nếu chỉ dùng 'if (count == 0)', khi bị đánh thức giả, luồng Máy in sẽ 
+ *    thoát khỏi if, đi thẳng xuống dưới và rút dữ liệu ra khỏi một hàng đợi 
+ *    đang trống rỗng -> Gây lỗi tràn bộ nhớ hoặc văng chương trình.
+ * 3. Khi bọc bằng vòng lặp 'while (count == 0)', luồng sau khi tỉnh dậy 
+ *    bắt buộc phải vòng lên kiểm tra lại biến count. Nếu thấy vẫn bằng 0 
+ *    (do bị gọi dậy nhầm), nó sẽ ngoan ngoãn gọi lại wait() và đi ngủ tiếp. 
+ *    Điều này đảm bảo an toàn tuyệt đối.
+ */
