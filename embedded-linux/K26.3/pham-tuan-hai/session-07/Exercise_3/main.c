@@ -1,0 +1,28 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <signal.h>
+
+
+int main() {
+	sigset_t block_set, old_set;
+	
+	sigemptyset(&block_set);
+	sigaddset(&block_set, SIGINT);
+	
+	for (int i = 0; i < 5; i++) {
+  	sigprocmask(SIG_BLOCK, &block_set, &old_set);
+		
+		printf("[SAFE] Writing transaction #%d ...\n", i + 1);
+		sleep(3);
+		
+		printf("[SAFE] Transaction #%d committed.\n", i + 1);
+		
+		sigprocmask(SIG_SETMASK, &old_set, NULL);
+		
+    printf("[IDLE] Waiting for next transaction...\n");
+		sleep(3);
+  }
+
+	return 0;
+}
