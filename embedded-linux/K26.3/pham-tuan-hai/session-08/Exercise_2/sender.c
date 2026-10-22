@@ -18,6 +18,7 @@ int main() {
 	if((sender_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
   	perror("Sock failed");
 		exit(1);
+		
   }
 	
 	struct sockaddr_in dest_addr;
